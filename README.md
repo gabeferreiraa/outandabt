@@ -1,50 +1,78 @@
-# Welcome to your Expo app 👋
+# Out&Abt 👋
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Welcome to **Out&Abt** - a React Native app built with Expo by the out&abt team.
 
-## Get started
+## Prerequisites
 
-1. Install dependencies
+Before you begin, make sure you have the following installed:
 
-   ```bash
-   npm install
-   ```
+- [Node.js](https://nodejs.org/) (v18 or newer recommended)
+- [npm](https://www.npmjs.com/) or [yarn](https://yarnpkg.com/)
+- [Expo Go app](https://expo.dev/go) on your iOS or Android device (for testing on a real device)
 
-2. Start the app
+## Getting Started
 
-   ```bash
-   npx expo start
-   ```
+Follow these steps to get the project running on your machine:
 
-In the output, you'll find options to open the app in a
-
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
+### 1. Clone the repository
 
 ```bash
-npm run reset-project
+git clone https://github.com/gabeferreiraa/outandabt.git
+cd outandabout
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### 2. Install dependencies
 
-## Learn more
+```bash
+npm install
+```
 
-To learn more about developing your project with Expo, look at the following resources:
+### 3. Start the development server
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+npx expo start
+```
 
-## Join the community
+### 4. Run the app
 
-Join our community of developers creating universal apps.
+After starting the development server, you'll see a QR code in your terminal. You have several options:
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+#### 4a running on personal ios device
+
+- **On your phone**: Download the [Expo Go app](https://expo.dev/go) and scan the QR code
+
+#### 4b running on ios simulator (Xcode required)
+
+- **iOS Simulator**: Press `i` in the terminal (macOS only, requires Xcode)
+
+## Project Structure
+
+- **app/** - Main application code with file-based routing
+- **assets/** - Images, fonts, and other static files
+- **components/** - Reusable React components
+
+## Development
+
+Start developing by editing files in the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction) with Expo Router.
+
+Changes you make will automatically reload in the app.
+
+## Useful Commands
+
+- `npx expo start` - Start the development server
+- `npx expo start --clear` - Start with cleared cache
+- `npm run reset-project` - Reset to a blank project (removes starter code)
+
+## Learn More
+
+- [Expo Documentation](https://docs.expo.dev/) - Learn about Expo features and API
+- [React Native Documentation](https://reactnative.dev/) - Learn about React Native
+- [Expo Router](https://docs.expo.dev/router/introduction/) - Learn about file-based routing
+
+## Team
+
+Built with ❤️ by the **out&abt** team
+
+## Support
+
+If you encounter any issues, please open an issue on GitHub or contact the team.
