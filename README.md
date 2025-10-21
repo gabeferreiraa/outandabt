@@ -37,11 +37,11 @@ npx expo start
 
 After starting the development server, you'll see a QR code in your terminal. You have several options:
 
-#### 4a running on personal ios device
+#### 4(a) running on personal ios device
 
 - **On your phone**: Download the [Expo Go app](https://expo.dev/go) and scan the QR code
 
-#### 4b running on ios simulator (Xcode required)
+#### 4(b) running on ios simulator (Xcode required)
 
 - **iOS Simulator**: Press `i` in the terminal (macOS only, requires Xcode)
 
