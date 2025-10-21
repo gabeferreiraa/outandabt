@@ -76,5 +76,3 @@ Built with ❤️ by the **out&abt** team
 ## Support
 
 If you encounter any issues, please open an issue on GitHub or contact the team.
-
-TEST TEST TEST
