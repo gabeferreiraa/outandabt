@@ -1,6 +1,3 @@
-Here is your **complete, single `README.md` file** — ready to copy-paste directly into your project:
-
-````markdown
 # Out&Abt
 
 Welcome to **Out&Abt** - a React Native app built with Expo by the out&abt team.
@@ -24,7 +21,6 @@ Follow these steps to get the project running on your machine:
 git clone https://github.com/gabeferreiraa/outandabt.git
 cd outandabt
 ```
-````
 
 ### 2. Install dependencies
 
