@@ -1,4 +1,4 @@
-// components/ui/ActivityCard.tsx   ← full corrected file
+// components/ui/ActivityCard.tsx
 import { Activity } from "@/lib/supabase";
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -9,27 +9,36 @@ interface ActivityCardProps {
 }
 
 export default function ActivityCard({ activity, onPress }: ActivityCardProps) {
-  // Safely parse images – this fixes the JSON parse crash
-  // In ActivityCard.tsx
-  const mainImage =
-    "https://via.placeholder.com/400x300/9333ea/ffffff?text=Photo";
+  // Your original static placeholder — simple and reliable
+  const mainImage = "/assets/images/mango-mango-dessert.jpeg";
 
   const formatPrice = () => {
     if (activity.price_min && activity.price_max) {
       return `$${activity.price_min}–$${activity.price_max}`;
     }
-    if (activity.price_min) return `From $${activity.price_min}`;
+    if (activity.price_min) {
+      return `From $${activity.price_min}`;
+    }
     return "Free";
   };
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
-      <Image source={{ uri: mainImage }} style={styles.image} />
+      <Image
+        source={{ uri: mainImage }}
+        style={styles.image}
+        resizeMode="cover"
+      />
       <View style={styles.content}>
         <Text style={styles.title} numberOfLines={2}>
           {activity.name}
         </Text>
-        <Text style={styles.category}>{activity.category}</Text>
+        <Text style={styles.category}>
+          {activity.category
+            ? activity.category.charAt(0).toUpperCase() +
+              activity.category.slice(1)
+            : ""}
+        </Text>
         <Text style={styles.price}>{formatPrice()}</Text>
       </View>
     </TouchableOpacity>

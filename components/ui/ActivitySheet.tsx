@@ -1,4 +1,3 @@
-// components/sheets/ActivitySheet.tsx
 import { Activity } from "@/lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
@@ -28,11 +27,9 @@ const ActivitySheet = forwardRef<BottomSheet, ActivitySheetProps>(
 
     const snapPoints = useMemo(() => ["90%"], []);
 
-    // Add this callback
     const handleSheetChange = useCallback(
       (index: number) => {
         if (index === -1) {
-          // Fully closed → tell Zustand to clear
           onClose();
         }
       },
@@ -41,15 +38,13 @@ const ActivitySheet = forwardRef<BottomSheet, ActivitySheetProps>(
 
     if (!activity) return null;
 
-    // In ActivitySheet.tsx (gallery)
-    const images = [
-      "https://via.placeholder.com/800x500/9333ea/ffffff?text=Mango+Mango",
-      "https://via.placeholder.com/800x500/a855f7/ffffff?text=Shaved+Ice+Heaven",
-      "https://via.placeholder.com/800x500/c084fc/ffffff?text=Purple+Vibes",
-    ];
+    // Your original static image — back to how you had it!
+    const images = ["../../assets/images/mango-mango-dessert.jpeg"];
+
+    // This fixes your main issue: use the actual activity coordinates
     const coordinates = {
-      latitude: 39.9526,
-      longitude: -75.1652,
+      latitude: activity.latitude ?? 39.9526,
+      longitude: activity.longitude ?? -75.1652,
     };
 
     const formatPrice = () => {
@@ -62,92 +57,89 @@ const ActivitySheet = forwardRef<BottomSheet, ActivitySheetProps>(
     return (
       <BottomSheet
         ref={sheetRef}
-        index={activity ? 0 : -1} // ← this line is key
+        index={0}
         snapPoints={snapPoints}
         enablePanDownToClose
-        onChange={handleSheetChange} // ← and this one
+        onChange={handleSheetChange}
         onClose={onClose}
         backgroundStyle={styles.background}
         handleIndicatorStyle={styles.handle}
       >
         <BottomSheetScrollView>
-          {activity && (
-            <>
-              <ScrollView
-                horizontal
-                pagingEnabled
-                showsHorizontalScrollIndicator={false}
-              >
-                {images.length > 0 ? (
-                  images.map((img: string, i: number) => (
-                    <Image
-                      key={i}
-                      source={{ uri: img }}
-                      style={styles.headerImage}
-                    />
-                  ))
-                ) : (
-                  <Image
-                    source={{ uri: "https://via.placeholder.com/400" }}
-                    style={styles.headerImage}
-                  />
-                )}
-              </ScrollView>
+          <>
+            <ScrollView
+              horizontal
+              pagingEnabled
+              showsHorizontalScrollIndicator={false}
+            >
+              {images.map((img, i) => (
+                <Image
+                  key={i}
+                  source={{ uri: img }}
+                  style={styles.headerImage}
+                  resizeMode="cover"
+                />
+              ))}
+            </ScrollView>
 
-              <View style={styles.content}>
-                <Text style={styles.title}>{activity.name}</Text>
-                <Text style={styles.price}>{formatPrice()}</Text>
-                <Text style={styles.category}>{activity.category}</Text>
+            <View style={styles.content}>
+              <Text style={styles.title}>{activity.name}</Text>
+              <Text style={styles.price}>{formatPrice()}</Text>
+              <Text style={styles.category}>
+                {activity.category?.charAt(0).toUpperCase() +
+                  activity.category?.slice(1)}
+              </Text>
 
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>About</Text>
-                  <Text style={styles.description}>{activity.description}</Text>
-                </View>
-
-                <View style={styles.section}>
-                  <Text style={styles.sectionTitle}>Location</Text>
-                  <Text style={styles.address}>{activity.address}</Text>
-                  {activity.google_maps_link && (
-                    <MapView
-                      style={styles.map}
-                      initialRegion={{
-                        ...coordinates,
-                        latitudeDelta: 0.01,
-                        longitudeDelta: 0.01,
-                      }}
-                    >
-                      <Marker coordinate={coordinates} />
-                    </MapView>
-                  )}
-                </View>
-
-                <View style={styles.actions}>
-                  {activity.link && (
-                    <TouchableOpacity
-                      style={styles.btn}
-                      onPress={() => Linking.openURL(activity.link)}
-                    >
-                      <Ionicons name="globe-outline" size={18} color="#333" />
-                      <Text style={styles.btnText}>Website</Text>
-                    </TouchableOpacity>
-                  )}
-                  {activity.google_maps_link && (
-                    <TouchableOpacity
-                      style={styles.btn}
-                      onPress={() => Linking.openURL(activity.google_maps_link)}
-                    >
-                      <Ionicons name="navigate" size={18} color="#333" />
-                      <Text style={styles.btnText}>Directions</Text>
-                    </TouchableOpacity>
-                  )}
-                  <TouchableOpacity style={styles.btn}>
-                    <Ionicons name="bookmark-outline" size={20} color="#333" />
-                    <Text style={styles.btnText}>Save</Text>
-                  </TouchableOpacity>
-                </View>
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>About</Text>
+                <Text style={styles.description}>{activity.description}</Text>
               </View>
-            </>
-          )}
+
+              <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Location</Text>
+                <Text style={styles.address}>{activity.address}</Text>
+
+                {/* Only show map if we have coordinates */}
+                {activity.latitude && activity.longitude && (
+                  <MapView
+                    style={styles.map}
+                    initialRegion={{
+                      ...coordinates,
+                      latitudeDelta: 0.01,
+                      longitudeDelta: 0.01,
+                    }}
+                  >
+                    <Marker coordinate={coordinates} />
+                  </MapView>
+                )}
+              </View>
+
+              <View style={styles.actions}>
+                {activity.link && (
+                  <TouchableOpacity
+                    style={styles.btn}
+                    onPress={() => Linking.openURL(activity.link)}
+                  >
+                    <Ionicons name="globe-outline" size={18} color="#333" />
+                    <Text style={styles.btnText}>Website</Text>
+                  </TouchableOpacity>
+                )}
+                {activity.google_maps_link && (
+                  <TouchableOpacity
+                    style={styles.btn}
+                    onPress={() => Linking.openURL(activity.google_maps_link)}
+                  >
+                    <Ionicons name="navigate" size={18} color="#333" />
+                    <Text style={styles.btnText}>Directions</Text>
+                  </TouchableOpacity>
+                )}
+                <TouchableOpacity style={styles.btn}>
+                  <Ionicons name="bookmark-outline" size={20} color="#333" />
+                  <Text style={styles.btnText}>Save</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </>
         </BottomSheetScrollView>
       </BottomSheet>
     );

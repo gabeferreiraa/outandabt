@@ -1,11 +1,13 @@
 import { HapticTab } from "@/components/haptic-tab";
-import { IconSymbol } from "@/components/ui/icon-symbol";
 import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { Tabs } from "expo-router";
 import React from "react";
 import { StyleSheet } from "react-native";
-
+import MapIcon from "../../assets/icons/map-fold.svg";
+import NewspaperIcon from "../../assets/icons/newspaper.svg";
+import ProfileIcon from "../../assets/icons/profile.svg";
+import SavedIcon from "../../assets/icons/saved.svg";
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 
@@ -24,7 +26,7 @@ export default function TabLayout() {
         options={{
           title: "Feed",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="house.fill" color={color} />
+            <NewspaperIcon width={24} height={24} color={color} />
           ),
         }}
       />
@@ -33,7 +35,7 @@ export default function TabLayout() {
         options={{
           title: "Explore",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="magnifyingglass" color={color} />
+            <MapIcon width={24} height={24} color={color} />
           ),
         }}
       />
@@ -42,7 +44,7 @@ export default function TabLayout() {
         options={{
           title: "Saved",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="heart.fill" color={color} />
+            <SavedIcon width={24} height={24} color={color} />
           ),
         }}
       />
@@ -51,7 +53,7 @@ export default function TabLayout() {
         options={{
           title: "Profile",
           tabBarIcon: ({ color }) => (
-            <IconSymbol size={28} name="person.fill" color={color} />
+            <ProfileIcon width={24} height={24} color={color} />
           ),
         }}
       />
@@ -61,7 +63,10 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   tabBarLabelStyle: {
-    fontSize: 14, // Set your desired font size here
+    fontSize: 12, // Set your desired font size here
+    fontFamily: "Poppins-Regular",
+    marginTop: 5,
+    color: "#231711",
   },
   tabBarStyle: {
     backgroundColor: "#FEFDF8",

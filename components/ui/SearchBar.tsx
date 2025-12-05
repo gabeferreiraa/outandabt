@@ -28,22 +28,21 @@ export default function SearchBar({
   return (
     <View style={styles.container}>
       <View style={styles.searchSection}>
-        <Ionicons
-          name="search"
-          size={20}
-          color="#666"
-          style={styles.searchIcon}
-        />
-
         <TextInput
           style={styles.input}
           placeholder={placeholder}
-          placeholderTextColor="#999"
+          placeholderTextColor="#231711"
           value={searchQuery}
           onChangeText={handleSearch}
           autoCapitalize="none"
           autoCorrect={false}
           returnKeyType="search"
+        />
+        <Ionicons
+          name="search"
+          size={20}
+          color="#231711"
+          style={styles.searchIcon}
         />
 
         {searchQuery.length > 0 && (
@@ -69,7 +68,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FEFDF8",
     borderWidth: 1,
     borderColor: "#333",
-    borderRadius: 25,
+    borderRadius: 12,
     paddingHorizontal: 16,
     height: 50,
   },

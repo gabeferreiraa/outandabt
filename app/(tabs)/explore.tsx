@@ -3,8 +3,9 @@ import SearchBar from "@/components/ui/SearchBar";
 import { useActivitySheet } from "@/hooks/useActivitySheet";
 import { Activity, getActivities } from "@/lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
+  ActivityIndicator,
   FlatList,
   ScrollView,
   StyleSheet,
@@ -13,7 +14,7 @@ import {
   View,
 } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import MapView, { PROVIDER_DEFAULT } from "react-native-maps";
+import MapView, { Marker, PROVIDER_DEFAULT, Region } from "react-native-maps";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function TabTwoScreen() {
@@ -31,14 +32,11 @@ export default function TabTwoScreen() {
     null
   );
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [mapRegion, setMapRegion] = useState<Region>(INITIAL_COORDS);
 
   const [activities, setActivities] = useState<Activity[]>([]);
-  const { activity, isOpen, open, close } = useActivitySheet();
-
-  useEffect(() => {
-    getActivities().then(setActivities);
-  }, []);
   const [loading, setLoading] = useState(true);
+  const { activity, isOpen, open, close } = useActivitySheet();
 
   useEffect(() => {
     loadActivities();
@@ -46,24 +44,137 @@ export default function TabTwoScreen() {
 
   const loadActivities = async () => {
     setLoading(true);
-    const data = await getActivities();
-    setActivities(data);
-    setLoading(false);
+    try {
+      const data = await getActivities();
+
+      // Log sample activity to check structure
+      if (data.length > 0) {
+        // Check how many have coordinates
+        const withCoords = data.filter((a) => a.latitude && a.longitude);
+        console.log();
+      }
+
+      setActivities(data);
+    } catch (error) {
+      console.error("❌ Error loading activities:", error);
+    } finally {
+      setLoading(false);
+    }
   };
+
+  // Filter activities based on search and category
+  const filteredActivities = useMemo(() => {
+    let filtered = activities;
+
+    // Apply category filter
+    if (selectedCategory) {
+      filtered = filtered.filter(
+        (activity) =>
+          activity.category?.toLowerCase() === selectedCategory.toLowerCase()
+      );
+    }
+
+    // Apply search filter
+    if (searchQuery) {
+      const query = searchQuery.toLowerCase();
+      filtered = filtered.filter(
+        (activity) =>
+          activity.name?.toLowerCase().includes(query) ||
+          activity.description?.toLowerCase().includes(query) ||
+          activity.address?.toLowerCase().includes(query)
+      );
+    }
+
+    return filtered;
+  }, [activities, selectedCategory, searchQuery]);
+
+  // Get activities with valid coordinates for map display
+  const mappableActivities = useMemo(() => {
+    const mappable = filteredActivities.filter((activity) => {
+      const hasCoords = activity.latitude && activity.longitude;
+      if (!hasCoords && activity.name) {
+        console.log(`⚠️ No coordinates for: ${activity.name}`);
+      }
+      return hasCoords;
+    });
+
+    if (mappable.length > 0) {
+      console.log(
+        "📍 Mappable activities sample:",
+        mappable.slice(0, 3).map((a) => ({
+          name: a.name,
+          lat: a.latitude,
+          lng: a.longitude,
+        }))
+      );
+    }
+
+    return mappable;
+  }, [filteredActivities]);
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
   };
 
   const handleActivityPress = (activity: Activity) => {
-    setSelectedActivity(activity);
-    setIsModalVisible(true);
+    open(activity);
+
+    // If in map view, center on the selected activity
+    if (viewMode === "map" && activity.latitude && activity.longitude) {
+      setMapRegion({
+        latitude: activity.latitude,
+        longitude: activity.longitude,
+        latitudeDelta: 0.01,
+        longitudeDelta: 0.01,
+      });
+    }
   };
 
   const handleCloseModal = () => {
     setIsModalVisible(false);
-    // Small delay before clearing to allow animation to complete
     setTimeout(() => setSelectedActivity(null), 300);
+  };
+
+  // Function to fit all markers in view
+  const fitAllMarkers = () => {
+    if (mappableActivities.length === 0) {
+      return;
+    }
+
+    const coordinates = mappableActivities.map((activity) => ({
+      latitude: activity.latitude!,
+      longitude: activity.longitude!,
+    }));
+
+    // Calculate bounding box
+    const minLat = Math.min(...coordinates.map((c) => c.latitude));
+    const maxLat = Math.max(...coordinates.map((c) => c.latitude));
+    const minLng = Math.min(...coordinates.map((c) => c.longitude));
+    const maxLng = Math.max(...coordinates.map((c) => c.longitude));
+
+    setMapRegion({
+      latitude: (minLat + maxLat) / 2,
+      longitude: (minLng + maxLng) / 2,
+      latitudeDelta: (maxLat - minLat) * 1.2,
+      longitudeDelta: (maxLng - minLng) * 1.2,
+    });
+  };
+
+  // Get marker color based on category
+  const getMarkerColor = (category: string) => {
+    const color = (() => {
+      switch (category?.toLowerCase()) {
+        case "eat":
+          return "#FF6B6B";
+        case "shop":
+          return "#4ECDC4";
+        case "see":
+          return "#45B7D1";
+        default:
+          return "#95A5A6";
+      }
+    })();
+    return color;
   };
 
   return (
@@ -75,7 +186,7 @@ export default function TabTwoScreen() {
               <SearchBar
                 onSearch={handleSearch}
                 value={searchQuery}
-                placeholder="Search for activities"
+                placeholder="Search"
               />
 
               {/* Map/List Toggle */}
@@ -83,10 +194,12 @@ export default function TabTwoScreen() {
                 <TouchableOpacity
                   style={[
                     styles.toggleButton,
-                    styles.toggleButtonLeft,
                     viewMode === "map" && styles.toggleButtonActive,
                   ]}
-                  onPress={() => setViewMode("map")}
+                  onPress={() => {
+                    console.log("🗺️ Switching to map view");
+                    setViewMode("map");
+                  }}
                 >
                   <Text
                     style={[
@@ -100,10 +213,12 @@ export default function TabTwoScreen() {
                 <TouchableOpacity
                   style={[
                     styles.toggleButton,
-                    styles.toggleButtonRight,
                     viewMode === "list" && styles.toggleButtonActive,
                   ]}
-                  onPress={() => setViewMode("list")}
+                  onPress={() => {
+                    console.log("📋 Switching to list view");
+                    setViewMode("list");
+                  }}
                 >
                   <Text
                     style={[
@@ -130,64 +245,150 @@ export default function TabTwoScreen() {
                       styles.filterButton,
                       selectedCategory === "eat" && styles.filterButtonActive,
                     ]}
-                    onPress={() =>
-                      setSelectedCategory(
-                        selectedCategory === "eat" ? null : "eat"
-                      )
-                    }
+                    onPress={() => {
+                      const newCategory =
+                        selectedCategory === "eat" ? null : "eat";
+                      console.log(
+                        `🍴 Eat filter: ${newCategory ? "ON" : "OFF"}`
+                      );
+                      setSelectedCategory(newCategory);
+                    }}
                   >
-                    <Text style={styles.filterText}>Eat & Drink</Text>
+                    <Text
+                      style={[
+                        styles.filterText,
+                        selectedCategory === "eat" && styles.filterTextActive,
+                      ]}
+                    >
+                      Eat & Drink
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[
                       styles.filterButton,
                       selectedCategory === "shop" && styles.filterButtonActive,
                     ]}
-                    onPress={() =>
-                      setSelectedCategory(
-                        selectedCategory === "shop" ? null : "shop"
-                      )
-                    }
+                    onPress={() => {
+                      const newCategory =
+                        selectedCategory === "shop" ? null : "shop";
+                      console.log(
+                        `🛍️ Shop filter: ${newCategory ? "ON" : "OFF"}`
+                      );
+                      setSelectedCategory(newCategory);
+                    }}
                   >
-                    <Text style={styles.filterText}>Shop & Stroll</Text>
+                    <Text
+                      style={[
+                        styles.filterText,
+                        selectedCategory === "shop" && styles.filterTextActive,
+                      ]}
+                    >
+                      Shop & Stroll
+                    </Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[
                       styles.filterButton,
                       selectedCategory === "see" && styles.filterButtonActive,
                     ]}
-                    onPress={() =>
-                      setSelectedCategory(
-                        selectedCategory === "see" ? null : "see"
-                      )
-                    }
+                    onPress={() => {
+                      const newCategory =
+                        selectedCategory === "see" ? null : "see";
+                      console.log(
+                        `👁️ See filter: ${newCategory ? "ON" : "OFF"}`
+                      );
+                      setSelectedCategory(newCategory);
+                    }}
                   >
-                    <Text style={styles.filterText}>See & Do</Text>
+                    <Text
+                      style={[
+                        styles.filterText,
+                        selectedCategory === "see" && styles.filterTextActive,
+                      ]}
+                    >
+                      See & Do
+                    </Text>
                   </TouchableOpacity>
                 </ScrollView>
               </View>
             </View>
-            {/* Conditional Rendering: Map or List */}
-            {viewMode === "map" ? (
-              <MapView
-                initialRegion={INITIAL_COORDS}
-                provider={PROVIDER_DEFAULT}
-                style={styles.mapView}
-                showsUserLocation
-                showsMyLocationButton
-              ></MapView>
-            ) : (
-              <>
-                <FlatList
-                  data={activities}
-                  keyExtractor={(item) => item.id.toString()}
-                  renderItem={({ item }) => (
-                    <ActivityCard activity={item} onPress={() => open(item)} />
-                  )}
-                />
 
-                {/* <ActivitySheet activity={activity} onClose={close} /> */}
-              </>
+            {/* Conditional Rendering: Map or List */}
+            {loading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#333" />
+                <Text style={styles.loadingText}>Loading activities...</Text>
+              </View>
+            ) : viewMode === "map" ? (
+              <View style={{ flex: 1 }}>
+                <MapView
+                  region={mapRegion}
+                  onRegionChangeComplete={(region) => {
+                    console.log("🗺️ Map region changed:", region);
+                    setMapRegion(region);
+                  }}
+                  provider={PROVIDER_DEFAULT}
+                  style={styles.mapView}
+                  showsUserLocation
+                  showsMyLocationButton
+                  onMapReady={() => {
+                    console.log("✅ Map is ready!");
+                  }}
+                >
+                  {mappableActivities.map((activity) => {
+                    return (
+                      <Marker
+                        key={activity.id}
+                        coordinate={{
+                          latitude: activity.latitude!,
+                          longitude: activity.longitude!,
+                        }}
+                        title={activity.name}
+                        description={`${activity.category} • $${activity.price_min}-$${activity.price_max}`}
+                        onPress={() => {
+                          handleActivityPress(activity);
+                        }}
+                        pinColor={getMarkerColor(activity.category)}
+                      />
+                    );
+                  })}
+                </MapView>
+
+                {/* Fit All Button */}
+                {mappableActivities.length > 1 && (
+                  <TouchableOpacity
+                    style={styles.fitAllButton}
+                    onPress={fitAllMarkers}
+                  >
+                    <Ionicons name="expand-outline" size={24} color="#333" />
+                  </TouchableOpacity>
+                )}
+              </View>
+            ) : (
+              <FlatList
+                data={filteredActivities}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={({ item }) => {
+                  return (
+                    <ActivityCard
+                      activity={item}
+                      onPress={() => handleActivityPress(item)}
+                    />
+                  );
+                }}
+                ListEmptyComponent={
+                  <View style={styles.emptyContainer}>
+                    <Text style={styles.emptyText}>
+                      No activities found matching your criteria
+                    </Text>
+                  </View>
+                }
+                contentContainerStyle={
+                  filteredActivities.length === 0
+                    ? styles.emptyListContainer
+                    : undefined
+                }
+              />
             )}
           </View>
         </SafeAreaView>
@@ -216,27 +417,29 @@ const styles = StyleSheet.create({
     marginHorizontal: 20,
     marginTop: 12,
     marginBottom: 8,
-    borderWidth: 1,
-    borderColor: "#333",
-    borderRadius: 25,
+    borderRadius: 8,
     overflow: "hidden",
+    // Fixed shadow syntax for React Native
+    shadowColor: "rgba(35, 23, 17, 0.13)",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   toggleButton: {
     flex: 1,
     paddingVertical: 10,
     alignItems: "center",
     backgroundColor: "#FEFDF8",
-  },
-  toggleButtonLeft: {
-    borderRightWidth: 0.5,
-    borderRightColor: "#333",
-  },
-  toggleButtonRight: {
-    borderLeftWidth: 0.5,
-    borderLeftColor: "#333",
+    // Fixed shadow syntax for React Native
+    shadowColor: "rgba(35, 23, 17, 0.13)",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 1,
+    shadowRadius: 4,
+    elevation: 2,
   },
   toggleButtonActive: {
-    backgroundColor: "#e0e0e0",
+    backgroundColor: "#5AA691",
   },
   toggleText: {
     fontSize: 16,
@@ -244,6 +447,7 @@ const styles = StyleSheet.create({
   },
   toggleTextActive: {
     fontWeight: "600",
+    color: "#FEFDF8",
   },
   filterContainer: {
     flexDirection: "row",
@@ -255,9 +459,9 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   filterButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "#333",
     backgroundColor: "#fff",
@@ -267,51 +471,73 @@ const styles = StyleSheet.create({
     backgroundColor: "#333",
   },
   filterText: {
-    fontSize: 14,
+    fontSize: 18,
     color: "#333",
+    fontFamily: "Poppins",
+  },
+  filterTextActive: {
+    color: "#fff",
   },
   mapView: {
     flex: 1,
   },
-  listContainer: {
-    padding: 16,
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
-  listItem: {
-    padding: 16,
-    backgroundColor: "#f9f9f9",
-    borderRadius: 10,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "#e0e0e0",
+  loadingText: {
+    marginTop: 12,
+    fontSize: 16,
+    color: "#666",
   },
-  listItemTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-    marginBottom: 4,
-    color: "#333",
+  mapOverlay: {
+    position: "absolute",
+    top: 16,
+    left: 16,
+    right: 16,
+    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    padding: 12,
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
   },
-  listItemCategory: {
+  mapOverlayText: {
     fontSize: 14,
-    color: "#666",
-    textTransform: "capitalize",
-    marginBottom: 8,
-  },
-  listItemMeta: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  listItemDistance: {
-    fontSize: 13,
-    color: "#999",
-  },
-  listItemPrice: {
-    fontSize: 13,
-    color: "#666",
+    color: "#333",
     fontWeight: "500",
+  },
+  mapOverlaySubtext: {
+    fontSize: 12,
+    color: "#999",
+    marginTop: 4,
+  },
+  fitAllButton: {
+    position: "absolute",
+    bottom: 100,
+    right: 16,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "#fff",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
   },
   emptyContainer: {
     padding: 32,
     alignItems: "center",
+  },
+  emptyListContainer: {
+    flexGrow: 1,
+    justifyContent: "center",
   },
   emptyText: {
     fontSize: 16,
