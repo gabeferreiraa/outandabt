@@ -23,7 +23,7 @@ export default function Feed() {
           <SearchBar
             onSearch={handleSearch}
             value={searchQuery}
-            placeholder="Search for activities"
+            placeholder="Search"
           />
         </View>
         <View style={styles.filterContainer}>
@@ -103,9 +103,9 @@ const styles = StyleSheet.create({
     marginRight: 12,
   },
   filterButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
     borderWidth: 1,
     borderColor: "#333",
     backgroundColor: "#fff",
@@ -115,7 +115,8 @@ const styles = StyleSheet.create({
     backgroundColor: "#333",
   },
   filterText: {
-    fontSize: 14,
+    fontSize: 18,
     color: "#333",
+    fontFamily: "Poppins",
   },
 });
