@@ -53,7 +53,6 @@ const ActivitySheet = forwardRef<BottomSheet, ActivitySheetProps>(
       if (activity.price_min) return `From $${activity.price_min}`;
       return "Price varies";
     };
-
     return (
       <BottomSheet
         ref={sheetRef}

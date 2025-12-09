@@ -21,6 +21,7 @@ export default function ActivityCard({ activity, onPress }: ActivityCardProps) {
     }
     return "Free";
   };
+  console.log(mainImage, "main image");
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>

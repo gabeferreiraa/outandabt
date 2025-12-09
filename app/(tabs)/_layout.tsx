@@ -26,7 +26,12 @@ export default function TabLayout() {
         options={{
           title: "Feed",
           tabBarIcon: ({ color }) => (
-            <NewspaperIcon width={24} height={24} color={color} />
+            <NewspaperIcon
+              width={24}
+              height={24}
+              color={color ?? "#CC432e"}
+              fill="#231711"
+            />
           ),
         }}
       />

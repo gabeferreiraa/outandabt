@@ -1,4 +1,5 @@
 import ActivitySheet from "@/components/ui/ActivitySheet";
+import { useAppFonts } from "@/fonts/useFonts";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { useActivitySheet } from "@/hooks/useActivitySheet";
 import {
@@ -16,7 +17,13 @@ export const unstable_settings = {
 };
 export default function RootLayout() {
   const { activity, close } = useActivitySheet();
+
   const colorScheme = useColorScheme();
+  const [fontsLoaded] = useAppFonts();
+
+  if (!fontsLoaded) {
+    return null; // or your splash screen
+  }
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
