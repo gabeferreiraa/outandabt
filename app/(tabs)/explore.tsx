@@ -1,10 +1,10 @@
 import CategoryFilterBar from "@/components/filters/CategoryFilterBar";
 import ActivityCard from "@/components/ui/ActivityCard";
 import SearchBar from "@/components/ui/SearchBar";
+import { getCategoryColor } from "@/constants/categoryColors";
 import { useActivitySheet } from "@/hooks/useActivitySheet";
 import { useFilteredActivities } from "@/hooks/useFilteredActivities";
 import { Activity, getActivities } from "@/lib/supabase";
-import { getCategoryColor } from "@/constants/categoryColors";
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -53,14 +53,6 @@ export default function ExploreScreen() {
 
   // Fit all markers when mappable activities are first loaded (not filtered)
   useEffect(() => {
-    console.log(
-      "mappableActivities changed:",
-      mappableActivities.length,
-      "category:",
-      selectedCategory,
-      "search:",
-      searchQuery
-    );
     if (mappableActivities.length > 0 && !selectedCategory && !searchQuery) {
       // Small delay to ensure map is ready
       const timer = setTimeout(() => {

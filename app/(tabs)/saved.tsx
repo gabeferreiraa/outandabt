@@ -1,17 +1,50 @@
 import { ThemedText } from "@/components/themed-text";
 import { ThemedView } from "@/components/themed-view";
 import React from "react";
-import { StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Image, StyleSheet, TouchableOpacity, View } from "react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 
 const Saved = () => {
+  const insets = useSafeAreaInsets();
+
   return (
-    <SafeAreaView>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText>
-          Hello! Welcome to the Saved page, what do you want to adjust?
-        </ThemedText>
+    <SafeAreaView style={styles.safeArea} edges={["bottom", "left", "right"]}>
+      {/* Full-width header that extends under the status bar */}
+      <ThemedView style={[styles.header, { paddingTop: insets.top }]}>
+        <View style={styles.headerContent}>
+          <ThemedText style={styles.headerTitle}>Saved</ThemedText>
+          <TouchableOpacity style={styles.createButton}>
+            <ThemedText style={styles.createButtonText}>Create</ThemedText>
+          </TouchableOpacity>
+        </View>
       </ThemedView>
+
+      {/* Main scrollable content */}
+      <View style={styles.container}>
+        <ThemedView style={styles.content}>
+          <View style={styles.illustrationContainer}>
+            <Image
+              source={require("@/assets/images/placeholder-1.png")}
+              style={styles.illustration}
+              resizeMode="contain"
+            />
+          </View>
+
+          <ThemedText style={styles.title}>Organize your activities</ThemedText>
+          <ThemedText style={styles.subtitle}>
+            Boards allow you to save places{"\n"}and share with your friends.
+          </ThemedText>
+
+          <TouchableOpacity style={styles.createBoardButton}>
+            <ThemedText style={styles.createBoardButtonText}>
+              Create a board
+            </ThemedText>
+          </TouchableOpacity>
+        </ThemedView>
+      </View>
     </SafeAreaView>
   );
 };
@@ -19,14 +52,79 @@ const Saved = () => {
 export default Saved;
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: "#808080",
-    bottom: -90,
-    left: -35,
-    position: "absolute",
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#FEFDF8",
   },
-  titleContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: "#FEFDF8",
+  },
+  header: {
+    backgroundColor: "#FEFDF8",
+    // No bottom padding here — we control spacing inside headerContent
+  },
+  headerContent: {
     flexDirection: "row",
-    gap: 8,
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 16, // Extra spacing below the status bar
+    paddingBottom: 16,
+  },
+  headerTitle: {
+    fontSize: 32,
+    fontWeight: "bold",
+  },
+  createButton: {
+    backgroundColor: "#4E917F",
+    paddingHorizontal: 15,
+    paddingVertical: 5,
+    borderRadius: 12,
+  },
+  createButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  content: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 40,
+  },
+  illustrationContainer: {
+    width: 300,
+    height: 200,
+    marginBottom: 40,
+  },
+  illustration: {
+    width: "100%",
+    height: "100%",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 12,
+  },
+  subtitle: {
+    fontSize: 16,
+    textAlign: "center",
+    color: "#666",
+    lineHeight: 24,
+    marginBottom: 32,
+  },
+  createBoardButton: {
+    backgroundColor: "#4E917F",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 12,
+    minHeight: 44,
+  },
+  createBoardButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });

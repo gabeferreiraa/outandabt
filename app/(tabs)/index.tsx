@@ -1,7 +1,9 @@
+import CategoryFilterBar from "@/components/filters/CategoryFilterBar";
 import SearchBar from "@/components/ui/SearchBar";
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import {
+  InteractionManager,
   ScrollView,
   StyleSheet,
   Text,
@@ -12,10 +14,19 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function Feed() {
   const [searchQuery, setSearchQuery] = useState("");
+  const updateTimeoutRef = useRef<NodeJS.Timeout>();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const handleSearch = (query: string) => {
     setSearchQuery(query);
   };
+
+  const handleCategoryPress = useCallback((category: string) => {
+    if (updateTimeoutRef.current) clearTimeout(updateTimeoutRef.current);
+
+    InteractionManager.runAfterInteractions(() => {
+      setSelectedCategory((prev) => (prev === category ? null : category));
+    });
+  }, []);
   return (
     <SafeAreaView style={styles.safeArea} edges={["top"]}>
       <View style={styles.container}>
@@ -34,39 +45,11 @@ export default function Feed() {
             style={styles.filterIcon}
           />
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <TouchableOpacity
-              style={[
-                styles.filterButton,
-                selectedCategory === "eat" && styles.filterButtonActive,
-              ]}
-              onPress={() =>
-                setSelectedCategory(selectedCategory === "eat" ? null : "eat")
-              }
-            >
-              <Text style={styles.filterText}>Eat & Drink</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.filterButton,
-                selectedCategory === "shop" && styles.filterButtonActive,
-              ]}
-              onPress={() =>
-                setSelectedCategory(selectedCategory === "shop" ? null : "shop")
-              }
-            >
-              <Text style={styles.filterText}>Shop & Stroll</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[
-                styles.filterButton,
-                selectedCategory === "see" && styles.filterButtonActive,
-              ]}
-              onPress={() =>
-                setSelectedCategory(selectedCategory === "see" ? null : "see")
-              }
-            >
-              <Text style={styles.filterText}>See & Do</Text>
-            </TouchableOpacity>
+            {/* Category Filters */}
+            <CategoryFilterBar
+              selectedCategory={selectedCategory}
+              onCategoryPress={handleCategoryPress}
+            />
           </ScrollView>
         </View>
       </View>

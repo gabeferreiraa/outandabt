@@ -1,65 +1,69 @@
 import { HapticTab } from "@/components/haptic-tab";
-import { Colors } from "@/constants/theme";
 import { useColorScheme } from "@/hooks/use-color-scheme";
 import { Tabs } from "expo-router";
 import React from "react";
-import { StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 import MapIcon from "../../assets/icons/map-fold.svg";
 import NewspaperIcon from "../../assets/icons/newspaper.svg";
 import ProfileIcon from "../../assets/icons/profile.svg";
 import SavedIcon from "../../assets/icons/saved.svg";
+
 export default function TabLayout() {
   const colorScheme = useColorScheme();
+
+  const renderTabIcon = (Icon: any, color: string, focused: boolean) => (
+    <View style={[styles.iconContainer, focused && styles.iconContainerActive]}>
+      <Icon
+        width={24}
+        height={24}
+        color={focused ? "#231711" : "#666"}
+        fill={focused ? "#231711" : "none"}
+      />
+    </View>
+  );
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
+        tabBarActiveTintColor: "#231711",
+        tabBarInactiveTintColor: "#666",
         headerShown: false,
         tabBarButton: HapticTab,
-        tabBarLabelStyle: styles.tabBarLabelStyle, // setting label size to 14 (for now)
+        tabBarLabelStyle: styles.tabBarLabelStyle,
         tabBarStyle: styles.tabBarStyle,
+        tabBarItemStyle: styles.tabBarItemStyle,
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: "Feed",
-          tabBarIcon: ({ color }) => (
-            <NewspaperIcon
-              width={24}
-              height={24}
-              color={color ?? "#CC432e"}
-              fill="#231711"
-            />
-          ),
+          tabBarIcon: ({ color, focused }) =>
+            renderTabIcon(NewspaperIcon, color, focused),
         }}
       />
       <Tabs.Screen
         name="explore"
         options={{
           title: "Explore",
-          tabBarIcon: ({ color }) => (
-            <MapIcon width={24} height={24} color={color} />
-          ),
+          tabBarIcon: ({ color, focused }) =>
+            renderTabIcon(MapIcon, color, focused),
         }}
       />
       <Tabs.Screen
         name="saved"
         options={{
           title: "Saved",
-          tabBarIcon: ({ color }) => (
-            <SavedIcon width={24} height={24} color={color} />
-          ),
+          tabBarIcon: ({ color, focused }) =>
+            renderTabIcon(SavedIcon, color, focused),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
-          tabBarIcon: ({ color }) => (
-            <ProfileIcon width={24} height={24} color={color} />
-          ),
+          tabBarIcon: ({ color, focused }) =>
+            renderTabIcon(ProfileIcon, color, focused),
         }}
       />
     </Tabs>
@@ -68,12 +72,31 @@ export default function TabLayout() {
 
 const styles = StyleSheet.create({
   tabBarLabelStyle: {
-    fontSize: 12, // Set your desired font size here
+    fontSize: 12,
     fontFamily: "Poppins-Regular",
-    marginTop: 5,
-    color: "#231711",
+    paddingTop: -4,
   },
   tabBarStyle: {
     backgroundColor: "#FEFDF8",
+    paddingTop: 8,
+    paddingBottom: 8,
+  },
+  tabBarItemStyle: {
+    borderRadius: 12,
+    marginHorizontal: 4,
+    paddingVertical: 4,
+  },
+  iconContainer: {
+    width: 48,
+    height: 48,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 12,
+    backgroundColor: "transparent",
+  },
+  iconContainerActive: {
+    backgroundColor: "#B8E7DA",
+    width: 50,
+    height: 50,
   },
 });
