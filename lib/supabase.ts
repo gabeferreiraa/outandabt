@@ -15,6 +15,7 @@ export interface Activity {
   google_maps_link: string;
   link: string;
   images: string;
+  image_url?: string;
   created_at: string;
   type: string;
 }
@@ -22,14 +23,29 @@ export interface Activity {
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
 const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
 
-
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
   throw new Error("Missing Supabase environment variables");
 }
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-// Fetch all activities
+const IMAGES_BUCKET = "images";
+export function getPublicImageUrl(path?: string | null) {
+  if (!path) return null;
+
+  const cleaned = path.replace(/^\/+/, "");
+
+  const { data } = supabase.storage.from(IMAGES_BUCKET).getPublicUrl(cleaned);
+  return data.publicUrl;
+}
+
+function withImageUrl(activity: Activity): Activity {
+  return {
+    ...activity,
+    image_url: getPublicImageUrl(activity.images) ?? undefined,
+  };
+}
+
 export async function getActivities() {
   const { data, error } = await supabase
     .from("activities")
@@ -41,32 +57,29 @@ export async function getActivities() {
     return [];
   }
 
-  return data as Activity[];
-}
-// Add this test function to your supabase.ts
-export async function testConnection() {
-  try {
-    // Test basic connection
-    const { data, error } = await supabase
-      .from("activities")
-      .select("count", { count: "exact", head: true });
-
-    if (error) {
-      console.error("Connection test error:", error);
-
-      // Try to get more info
-      const { data: authData, error: authError } =
-        await supabase.auth.getSession();
- 
-    } else {
-      console.log("Connection successful! Row count:", data);
-    }
-  } catch (e) {
-    console.error("Test failed:", e);
-  }
+  return (data as Activity[]).map(withImageUrl);
 }
 
-// Fetch activities by category
+// export async function testConnection() {
+//   try {
+//     // Test basic connection
+//     const { data, error } = await supabase
+//       .from("activities")
+//       .select("count", { count: "exact", head: true });
+
+//     if (error) {
+//       console.error("Connection test error:", error);
+
+//       // Try to get more info
+//       await supabase.auth.getSession();
+//     } else {
+//       console.log("Connection successful! Row count:", data);
+//     }
+//   } catch (e) {
+//     console.error("Test failed:", e);
+//   }
+// }
+
 export async function getActivitiesByCategory(category: string) {
   const { data, error } = await supabase
     .from("activities")
@@ -79,7 +92,7 @@ export async function getActivitiesByCategory(category: string) {
     return [];
   }
 
-  return data as Activity[];
+  return (data as Activity[]).map(withImageUrl);
 }
 
 // Fetch single activity by ID
@@ -95,7 +108,7 @@ export async function getActivityById(id: number) {
     return null;
   }
 
-  return data as Activity;
+  return withImageUrl(data as Activity);
 }
 
 // Search activities by name or description
@@ -110,7 +123,7 @@ export async function searchActivities(searchTerm: string) {
     return [];
   }
 
-  return data as Activity[];
+  return (data as Activity[]).map(withImageUrl);
 }
 
 // Get activities within a price range
@@ -130,7 +143,7 @@ export async function getActivitiesByPriceRange(
     return [];
   }
 
-  return data as Activity[];
+  return (data as Activity[]).map(withImageUrl);
 }
 
 // Get activities by type
@@ -146,5 +159,5 @@ export async function getActivitiesByType(type: string) {
     return [];
   }
 
-  return data as Activity[];
+  return (data as Activity[]).map(withImageUrl);
 }

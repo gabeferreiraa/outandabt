@@ -74,7 +74,7 @@ const ActivitySheet = forwardRef<BottomSheet, ActivitySheetProps>(
               {images.map((img, i) => (
                 <Image
                   key={i}
-                  source={{ uri: img }}
+                  source={{ uri: activity.image_url }}
                   style={styles.headerImage}
                   resizeMode="cover"
                 />

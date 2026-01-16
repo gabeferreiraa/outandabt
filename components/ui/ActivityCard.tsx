@@ -1,4 +1,3 @@
-// components/ui/ActivityCard.tsx
 import { Activity } from "@/lib/supabase";
 import React from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
@@ -10,7 +9,6 @@ interface ActivityCardProps {
 
 export default function ActivityCard({ activity, onPress }: ActivityCardProps) {
   // Your original static placeholder — simple and reliable
-  const mainImage = "/assets/images/mango-mango-dessert.jpeg";
 
   const formatPrice = () => {
     if (activity.price_min && activity.price_max) {
@@ -21,12 +19,11 @@ export default function ActivityCard({ activity, onPress }: ActivityCardProps) {
     }
     return "Free";
   };
-  console.log(mainImage, "main image");
 
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
       <Image
-        source={{ uri: mainImage }}
+        source={{ uri: activity.image_url }}
         style={styles.image}
         resizeMode="cover"
       />

@@ -37,7 +37,10 @@ export default function ExploreScreen() {
   const [isUpdatingMarkers, setIsUpdatingMarkers] = useState(false);
 
   const mapRef = useRef<MapView>(null);
-  const updateTimeoutRef = useRef<NodeJS.Timeout>();
+
+  // ✅ RN-safe timeout ref typing (avoids NodeJS.Timeout type issues in Expo)
+  const updateTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const { open } = useActivitySheet();
 
   // This hook handles ALL filtering + caching + debouncing
@@ -46,80 +49,6 @@ export default function ExploreScreen() {
     selectedCategory,
     searchQuery
   );
-
-  useEffect(() => {
-    loadActivities();
-  }, []);
-
-  // Fit all markers when mappable activities are first loaded (not filtered)
-  useEffect(() => {
-    if (mappableActivities.length > 0 && !selectedCategory && !searchQuery) {
-      // Small delay to ensure map is ready
-      const timer = setTimeout(() => {
-        console.log("Fitting all markers");
-        fitAllMarkers();
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [mappableActivities.length, fitAllMarkers]);
-
-  const loadActivities = async () => {
-    setLoading(true);
-    try {
-      const data = await getActivities();
-      console.log("Loaded activities:", data.length);
-      console.log(
-        "Activities with coords:",
-        data.filter(
-          (a) =>
-            typeof a.latitude === "number" && typeof a.longitude === "number"
-        ).length
-      );
-      setActivities(data);
-    } catch (error) {
-      console.error("Error loading activities:", error);
-      setActivities([]);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSearch = useCallback((query: string) => {
-    setSearchQuery(query);
-  }, []);
-
-  const handleActivityPress = useCallback(
-    (activity: Activity) => {
-      if (!activity) return;
-      open(activity);
-
-      if (viewMode === "map" && activity.latitude && activity.longitude) {
-        mapRef.current?.animateToRegion(
-          {
-            latitude: activity.latitude,
-            longitude: activity.longitude,
-            latitudeDelta: 0.01,
-            longitudeDelta: 0.01,
-          },
-          1000
-        );
-      }
-    },
-    [viewMode, open]
-  );
-
-  const handleCategoryPress = useCallback((category: string) => {
-    if (updateTimeoutRef.current) clearTimeout(updateTimeoutRef.current);
-    setIsUpdatingMarkers(true);
-
-    InteractionManager.runAfterInteractions(() => {
-      setSelectedCategory((prev) => (prev === category ? null : category));
-      updateTimeoutRef.current = setTimeout(
-        () => setIsUpdatingMarkers(false),
-        500
-      );
-    });
-  }, []);
 
   const fitAllMarkers = useCallback(() => {
     if (mappableActivities.length === 0) return;
@@ -146,6 +75,74 @@ export default function ExploreScreen() {
     mapRef.current?.animateToRegion(region, 1000);
   }, [mappableActivities]);
 
+  useEffect(() => {
+    loadActivities();
+  }, []);
+
+  // Fit all markers when mappable activities are first loaded (not filtered)
+  useEffect(() => {
+    if (mappableActivities.length > 0 && !selectedCategory && !searchQuery) {
+      const timer = setTimeout(() => {
+        fitAllMarkers();
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [mappableActivities.length, selectedCategory, searchQuery, fitAllMarkers]);
+
+  const loadActivities = async () => {
+    setLoading(true);
+    try {
+      const data = await getActivities();
+      console.log("sample activity:", data[0]);
+      console.log("sample activity.image_url:", data[0]?.image_url);
+
+      setActivities(data);
+    } catch (error) {
+      console.error("Error loading activities:", error);
+      setActivities([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query);
+  }, []);
+
+  const handleActivityPress = useCallback(
+    (activity: Activity) => {
+      if (!activity) return;
+
+      open(activity);
+
+      if (viewMode === "map" && activity.latitude && activity.longitude) {
+        mapRef.current?.animateToRegion(
+          {
+            latitude: activity.latitude,
+            longitude: activity.longitude,
+            latitudeDelta: 0.01,
+            longitudeDelta: 0.01,
+          },
+          1000
+        );
+      }
+    },
+    [viewMode, open]
+  );
+
+  const handleCategoryPress = useCallback((category: string) => {
+    if (updateTimeoutRef.current) clearTimeout(updateTimeoutRef.current);
+    setIsUpdatingMarkers(true);
+
+    InteractionManager.runAfterInteractions(() => {
+      setSelectedCategory((prev) => (prev === category ? null : category));
+
+      updateTimeoutRef.current = setTimeout(() => {
+        setIsUpdatingMarkers(false);
+      }, 500);
+    });
+  }, []);
+
   const getMarkerColor = useCallback((category?: string) => {
     return getCategoryColor(category);
   }, []);
@@ -153,11 +150,6 @@ export default function ExploreScreen() {
   const markers = useMemo(() => {
     // Don't clear markers on initial load
     if (isUpdatingMarkers && selectedCategory !== null) return [];
-
-    console.log(
-      "Creating markers, mappableActivities:",
-      mappableActivities.length
-    );
 
     return mappableActivities.map((activity) => (
       <Marker
