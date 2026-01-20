@@ -1,5 +1,5 @@
 import { Activity } from "@/lib/supabase";
-import React from "react";
+import React, { useState } from "react";
 import { Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface ActivityCardProps {
@@ -8,11 +8,11 @@ interface ActivityCardProps {
 }
 
 export default function ActivityCard({ activity, onPress }: ActivityCardProps) {
-  // Your original static placeholder — simple and reliable
+  const [imageError, setImageError] = useState(false);
 
   const formatPrice = () => {
     if (activity.price_min && activity.price_max) {
-      return `$${activity.price_min}–$${activity.price_max}`;
+      return `$${activity.price_min}—$${activity.price_max}`;
     }
     if (activity.price_min) {
       return `From $${activity.price_min}`;
@@ -20,12 +20,27 @@ export default function ActivityCard({ activity, onPress }: ActivityCardProps) {
     return "Free";
   };
 
+  // Placeholder image if no image URL or error loading
+  const imageSource =
+    imageError || !activity.image_url
+      ? { uri: "https://via.placeholder.com/110x110.png?text=No+Image" }
+      : { uri: activity.image_url };
+
   return (
     <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.8}>
       <Image
-        source={{ uri: activity.image_url }}
+        source={imageSource}
         style={styles.image}
         resizeMode="cover"
+        onError={(e) => {
+          console.log(`❌ Image failed to load for "${activity.name}"`);
+          console.log("  URL was:", activity.image_url);
+          console.log("  Error:", e.nativeEvent.error);
+          setImageError(true);
+        }}
+        onLoad={() => {
+          console.log(`✅ Image loaded successfully for "${activity.name}"`);
+        }}
       />
       <View style={styles.content}>
         <Text style={styles.title} numberOfLines={2}>
@@ -60,6 +75,7 @@ const styles = StyleSheet.create({
   image: {
     width: 110,
     height: 110,
+    backgroundColor: "#f0f0f0", // Shows while loading
   },
   content: {
     flex: 1,

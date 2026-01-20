@@ -4,7 +4,7 @@ import SearchBar from "@/components/ui/SearchBar";
 import { getCategoryColor } from "@/constants/categoryColors";
 import { useActivitySheet } from "@/hooks/useActivitySheet";
 import { useFilteredActivities } from "@/hooks/useFilteredActivities";
-import { Activity, getActivities } from "@/lib/supabase";
+import { Activity, debugBucketStructure, getActivities } from "@/lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -92,9 +92,8 @@ export default function ExploreScreen() {
   const loadActivities = async () => {
     setLoading(true);
     try {
+      await debugBucketStructure();
       const data = await getActivities();
-      console.log("sample activity:", data[0]);
-      console.log("sample activity.image_url:", data[0]?.image_url);
 
       setActivities(data);
     } catch (error) {
@@ -296,7 +295,7 @@ export default function ExploreScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#FEFDF8" },
+  safeArea: { flex: 1, backgroundColor: "#FEFDF8", paddingHorizontal: 16 },
   container: { flex: 1, backgroundColor: "#FEFDF8" },
   searchContainer: {
     zIndex: 1,

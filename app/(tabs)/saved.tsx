@@ -11,14 +11,10 @@ const Saved = () => {
   const insets = useSafeAreaInsets();
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={["bottom", "left", "right"]}>
-      {/* Full-width header that extends under the status bar */}
-      <ThemedView style={[styles.header, { paddingTop: insets.top }]}>
+    <SafeAreaView style={styles.safeArea} edges={["top"]}>
+      <ThemedView style={[styles.header]}>
         <View style={styles.headerContent}>
-          <ThemedText style={styles.headerTitle}>Saved</ThemedText>
-          <TouchableOpacity style={styles.createButton}>
-            <ThemedText style={styles.createButtonText}>Create</ThemedText>
-          </TouchableOpacity>
+          <ThemedText style={styles.brand}>Saved</ThemedText>
         </View>
       </ThemedView>
 
@@ -64,6 +60,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FEFDF8",
     // No bottom padding here — we control spacing inside headerContent
   },
+  brand: { marginTop: 6, fontSize: 24, fontWeight: "800", color: "#1F1F1F" },
   headerContent: {
     flexDirection: "row",
     justifyContent: "space-between",

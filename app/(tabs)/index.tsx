@@ -2,7 +2,7 @@ import CategoryFilterBar from "@/components/filters/CategoryFilterBar";
 import FeedActivityCard from "@/components/ui/FeedActivityCard";
 import SearchBar from "@/components/ui/SearchBar";
 import { useActivitySheet } from "@/hooks/useActivitySheet";
-import { Activity, supabase } from "@/lib/supabase";
+import { Activity, getActivities } from "@/lib/supabase";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -41,18 +41,11 @@ export default function Feed() {
 
     const load = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("activities")
-        .select("*")
-        .order("created_at", { ascending: false });
+
+      const data = await getActivities();
 
       if (!mounted) return;
-      if (error) {
-        console.log("Feed activities error:", error.message);
-        setActivities([]);
-      } else {
-        setActivities((data as Activity[]) ?? []);
-      }
+      setActivities(data);
       setLoading(false);
     };
 
@@ -79,8 +72,8 @@ export default function Feed() {
     });
   }, [activities, searchQuery, selectedCategory]);
 
-  const popular = useMemo(() => filtered.slice(0, 10), [filtered]);
-  const hotSpots = useMemo(() => filtered.slice(0, 10), [filtered]);
+  const popular = useMemo(() => filtered.slice(10, 35), [filtered]);
+  const hotSpots = useMemo(() => filtered.slice(10, 35), [filtered]);
 
   const handleSearch = (query: string) => setSearchQuery(query);
 

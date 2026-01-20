@@ -33,7 +33,6 @@ export default function FeedActivityCard({
   const categoryLabel = activity.category
     ? activity.category.charAt(0).toUpperCase() + activity.category.slice(1)
     : "";
-
   return (
     <TouchableOpacity
       activeOpacity={0.9}
