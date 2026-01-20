@@ -10,7 +10,7 @@ interface SearchBarProps {
 
 export default function SearchBar({
   onSearch,
-  placeholder = "Search...",
+  placeholder = "Search food, events, activities",
   value: controlledValue,
 }: SearchBarProps) {
   const [searchQuery, setSearchQuery] = useState(controlledValue || "");
@@ -28,6 +28,12 @@ export default function SearchBar({
   return (
     <View style={styles.container}>
       <View style={styles.searchSection}>
+        <Ionicons
+          name="search"
+          size={20}
+          color="#231711"
+          style={styles.searchIcon}
+        />
         <TextInput
           style={styles.input}
           placeholder={placeholder}
@@ -37,12 +43,6 @@ export default function SearchBar({
           autoCapitalize="none"
           autoCorrect={false}
           returnKeyType="search"
-        />
-        <Ionicons
-          name="search"
-          size={20}
-          color="#231711"
-          style={styles.searchIcon}
         />
 
         {searchQuery.length > 0 && (
@@ -57,7 +57,7 @@ export default function SearchBar({
 
 const styles = StyleSheet.create({
   container: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 0,
     paddingTop: 16,
     paddingBottom: 12,
     backgroundColor: "#FEFDF8",
@@ -65,20 +65,21 @@ const styles = StyleSheet.create({
   searchSection: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#FEFDF8",
+    backgroundColor: "#DCDBD6",
     borderWidth: 1,
-    borderColor: "#333",
+    borderColor: "#DCDBD6",
     borderRadius: 12,
     paddingHorizontal: 16,
-    height: 50,
+    height: 48,
+    minWidth: 30,
   },
   searchIcon: {
     marginRight: 8,
   },
   input: {
     flex: 1,
-    fontSize: 16,
-    color: "#333",
+    fontSize: 14,
+    color: "#A7A2A0",
     paddingVertical: 8,
   },
   clearButton: {

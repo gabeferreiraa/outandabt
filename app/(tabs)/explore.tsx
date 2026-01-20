@@ -180,11 +180,7 @@ export default function ExploreScreen() {
       <SafeAreaView style={styles.safeArea} edges={["top"]}>
         <View style={styles.container}>
           <View style={styles.searchContainer}>
-            <SearchBar
-              onSearch={handleSearch}
-              value={searchQuery}
-              placeholder="Search"
-            />
+            <SearchBar onSearch={handleSearch} value={searchQuery} />
 
             {/* Map/List Toggle */}
             <View style={styles.toggleContainer}>

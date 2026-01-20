@@ -23,8 +23,6 @@ interface ActivitySheetProps {
 
 const ActivitySheet = forwardRef<BottomSheet, ActivitySheetProps>(
   ({ activity, onClose }, ref) => {
-    const sheetRef = useRef<BottomSheet>(null);
-
     const snapPoints = useMemo(() => ["90%"], []);
 
     const handleSheetChange = useCallback(
@@ -37,9 +35,6 @@ const ActivitySheet = forwardRef<BottomSheet, ActivitySheetProps>(
     );
 
     if (!activity) return null;
-
-    // Your original static image — back to how you had it!
-    const images = ["../../assets/images/mango-mango-dessert.jpeg"];
 
     // This fixes your main issue: use the actual activity coordinates
     const coordinates = {
@@ -55,7 +50,7 @@ const ActivitySheet = forwardRef<BottomSheet, ActivitySheetProps>(
     };
     return (
       <BottomSheet
-        ref={sheetRef}
+        ref={ref}
         index={0}
         snapPoints={snapPoints}
         enablePanDownToClose
@@ -71,14 +66,11 @@ const ActivitySheet = forwardRef<BottomSheet, ActivitySheetProps>(
               pagingEnabled
               showsHorizontalScrollIndicator={false}
             >
-              {images.map((img, i) => (
-                <Image
-                  key={i}
-                  source={{ uri: activity.image_url }}
-                  style={styles.headerImage}
-                  resizeMode="cover"
-                />
-              ))}
+              <Image
+                source={{ uri: activity.image_url }}
+                style={styles.headerImage}
+                resizeMode="cover"
+              />
             </ScrollView>
 
             <View style={styles.content}>

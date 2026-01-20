@@ -1,13 +1,15 @@
 import CategoryFilterBar from "@/components/filters/CategoryFilterBar";
+import FeedActivityCard from "@/components/ui/FeedActivityCard";
 import SearchBar from "@/components/ui/SearchBar";
-import { Ionicons } from "@expo/vector-icons";
-import { useCallback, useRef, useState } from "react";
+import { useActivitySheet } from "@/hooks/useActivitySheet";
+import { Activity, supabase } from "@/lib/supabase";
+import BottomSheet from "@gorhom/bottom-sheet";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   InteractionManager,
   ScrollView,
   StyleSheet,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -16,90 +18,188 @@ export default function Feed() {
   const [searchQuery, setSearchQuery] = useState("");
   const updateTimeoutRef = useRef<NodeJS.Timeout>();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const handleSearch = (query: string) => {
-    setSearchQuery(query);
-  };
+
+  const sheetRef = useRef<BottomSheet>(null);
+  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(
+    null
+  );
+
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const { open } = useActivitySheet();
+
+  const handleActivityPress = useCallback(
+    (activity: Activity) => {
+      if (!activity) return;
+      open(activity); // ✅ this opens the global sheet that overlays the tab bar
+    },
+    [open]
+  );
+  useEffect(() => {
+    let mounted = true;
+
+    const load = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("activities")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (!mounted) return;
+      if (error) {
+        console.log("Feed activities error:", error.message);
+        setActivities([]);
+      } else {
+        setActivities((data as Activity[]) ?? []);
+      }
+      setLoading(false);
+    };
+
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const filtered = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+
+    return activities.filter((a) => {
+      const matchesQuery =
+        !q ||
+        (a.name ?? "").toLowerCase().includes(q) ||
+        (a.description ?? "").toLowerCase().includes(q);
+
+      const matchesCategory =
+        !selectedCategory ||
+        (a.category ?? "").toLowerCase() === selectedCategory.toLowerCase();
+
+      return matchesQuery && matchesCategory;
+    });
+  }, [activities, searchQuery, selectedCategory]);
+
+  const popular = useMemo(() => filtered.slice(0, 10), [filtered]);
+  const hotSpots = useMemo(() => filtered.slice(0, 10), [filtered]);
+
+  const handleSearch = (query: string) => setSearchQuery(query);
 
   const handleCategoryPress = useCallback((category: string) => {
     if (updateTimeoutRef.current) clearTimeout(updateTimeoutRef.current);
-
     InteractionManager.runAfterInteractions(() => {
       setSelectedCategory((prev) => (prev === category ? null : category));
     });
   }, []);
+
+  const openActivity = (activity: Activity) => {
+    setSelectedActivity(activity);
+
+    // wait a tick so sheet mounts with the activity
+    requestAnimationFrame(() => {
+      sheetRef.current?.snapToIndex(0); // or snapToIndex(0)
+    });
+  };
+
+  const closeSheet = () => {
+    sheetRef.current?.close();
+    setSelectedActivity(null);
+  };
+
   return (
-    <SafeAreaView style={styles.safeArea} edges={["top"]}>
-      <View style={styles.container}>
-        <View style={styles.searchContainer}>
-          <SearchBar
-            onSearch={handleSearch}
-            value={searchQuery}
-            placeholder="Search"
-          />
-        </View>
-        <View style={styles.filterContainer}>
-          <Ionicons
-            name="options-outline"
-            size={24}
-            color="#333"
-            style={styles.filterIcon}
-          />
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            {/* Category Filters */}
-            <CategoryFilterBar
-              selectedCategory={selectedCategory}
-              onCategoryPress={handleCategoryPress}
-            />
+    <>
+      <SafeAreaView style={styles.safeArea} edges={["top"]}>
+        <View style={styles.container}>
+          <Text style={styles.brand}>out&abt</Text>
+
+          <View style={styles.searchWrap}>
+            <SearchBar onSearch={handleSearch} value={searchQuery} />
+          </View>
+
+          <View style={styles.filterRow}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <CategoryFilterBar
+                selectedCategory={selectedCategory}
+                onCategoryPress={handleCategoryPress}
+              />
+            </ScrollView>
+          </View>
+
+          <Text style={styles.kicker}>New activities await</Text>
+          <Text style={styles.sectionTitle}>Popular right now</Text>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ marginTop: 10 }}
+          >
+            {popular.map((a) => (
+              <FeedActivityCard
+                key={a.id}
+                activity={a}
+                variant="horizontal"
+                onPress={() => handleActivityPress(a)}
+                onBookmarkPress={() => {}}
+              />
+            ))}
           </ScrollView>
+
+          <Text style={[styles.sectionTitle, { marginTop: 18 }]}>
+            New hot spots
+          </Text>
+
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={{ marginTop: 10 }}
+          >
+            {hotSpots.map((a) => (
+              <FeedActivityCard
+                key={a.id}
+                activity={a}
+                variant="horizontal"
+                onPress={() => handleActivityPress(a)}
+                onBookmarkPress={() => {}}
+              />
+            ))}
+          </ScrollView>
+
+          {loading ? <Text style={styles.loading}>Loading…</Text> : null}
         </View>
-      </View>
-    </SafeAreaView>
+      </SafeAreaView>
+    </>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#FEFDF8",
-  },
-  titleContainer: {
-    flexDirection: "row",
-    gap: 8,
-  },
+  safeArea: { flex: 1, backgroundColor: "#FEFDF8" },
   container: {
     flex: 1,
     backgroundColor: "#FEFDF8",
+    paddingHorizontal: 16,
+    paddingBottom: 12,
   },
-  searchContainer: {
-    zIndex: 1,
-    elevation: 3,
-    backgroundColor: "#FEFDF8",
-    paddingBottom: 8,
-  },
-  filterContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: 20,
+  content: {},
+
+  brand: { marginTop: 6, fontSize: 24, fontWeight: "800", color: "#1F1F1F" },
+
+  searchWrap: { marginTop: 14 },
+
+  filterRow: { flexDirection: "row", alignItems: "center" },
+
+  kicker: { marginTop: 16, fontSize: 16, fontWeight: "700", color: "#4A4A4A" },
+  sectionTitle: {
     marginTop: 8,
-  },
-  filterIcon: {
-    marginRight: 12,
-  },
-  filterButton: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#333",
-    backgroundColor: "#fff",
-    marginRight: 8,
-  },
-  filterButtonActive: {
-    backgroundColor: "#333",
-  },
-  filterText: {
     fontSize: 18,
-    color: "#333",
-    fontFamily: "Poppins",
+    fontWeight: "800",
+    color: "#1F1F1F",
   },
+
+  grid: {
+    marginTop: 12,
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+  },
+
+  loading: { marginTop: 12, color: "#6B6B6B" },
 });
