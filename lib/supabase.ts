@@ -1,3 +1,5 @@
+import "react-native-url-polyfill/auto";
+
 import { createClient } from "@supabase/supabase-js";
 
 export interface Activity {
@@ -20,14 +22,36 @@ export interface Activity {
   type: string;
 }
 
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL;
-const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+let supabaseInstance: ReturnType<typeof createClient> | null = null;
 
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  throw new Error("Missing Supabase environment variables");
+function getSupabase() {
+  if (!supabaseInstance) {
+    const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
+    const key = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+
+    if (!url || !key) {
+      console.error(
+        "Missing Supabase environment variables!\n" +
+          `URL: ${url ?? "missing"}\n` +
+          `Key: ${key ? "present (hidden)" : "missing"}`
+      );
+      // Instead of throwing → return a dummy client or null
+      // This prevents app crash on launch. You can handle this in your UI instead.
+      supabaseInstance = createClient(
+        "https://dummy.supabase.co",
+        "dummy-key",
+        {
+          // realtime: { transport: null }, // Uncomment if you don't use realtime → smaller bundle
+        }
+      );
+    } else {
+      supabaseInstance = createClient(url, key, {
+        // realtime: { transport: null }, // Uncomment to disable realtime if unused
+      });
+    }
+  }
+  return supabaseInstance;
 }
-
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 const IMAGES_BUCKET = "images";
 
@@ -36,10 +60,10 @@ export function getPublicImageUrl(path?: string | null) {
 
   // Remove leading slashes
   let cleaned = path.replace(/^\/+/, "");
-
-  // 🔧 FIX: Remove "photos/" prefix since files are in bucket root
+  // Remove "photos/" prefix if files are stored in bucket root
   cleaned = cleaned.replace(/^photos\//, "");
 
+  const supabase = getSupabase();
   const { data } = supabase.storage.from(IMAGES_BUCKET).getPublicUrl(cleaned);
 
   return data.publicUrl;
@@ -55,6 +79,7 @@ function withImageUrl(activity: Activity): Activity {
 }
 
 export async function getActivities() {
+  const supabase = getSupabase();
   const { data, error } = await supabase
     .from("activities")
     .select("*")
@@ -69,7 +94,6 @@ export async function getActivities() {
 
   const activitiesWithImages = (data as Activity[]).map(withImageUrl);
 
-  // Log first activity for inspection
   if (activitiesWithImages.length > 0) {
     console.log("📋 First activity sample:");
     console.log("  Name:", activitiesWithImages[0].name);
@@ -81,6 +105,7 @@ export async function getActivities() {
 }
 
 export async function getActivitiesByCategory(category: string) {
+  const supabase = getSupabase();
   const { data, error } = await supabase
     .from("activities")
     .select("*")
@@ -96,6 +121,7 @@ export async function getActivitiesByCategory(category: string) {
 }
 
 export async function getActivityById(id: number) {
+  const supabase = getSupabase();
   const { data, error } = await supabase
     .from("activities")
     .select("*")
@@ -111,6 +137,7 @@ export async function getActivityById(id: number) {
 }
 
 export async function searchActivities(searchTerm: string) {
+  const supabase = getSupabase();
   const { data, error } = await supabase
     .from("activities")
     .select("*")
@@ -128,6 +155,7 @@ export async function getActivitiesByPriceRange(
   minPrice: number,
   maxPrice: number
 ) {
+  const supabase = getSupabase();
   const { data, error } = await supabase
     .from("activities")
     .select("*")
@@ -144,6 +172,7 @@ export async function getActivitiesByPriceRange(
 }
 
 export async function getActivitiesByType(type: string) {
+  const supabase = getSupabase();
   const { data, error } = await supabase
     .from("activities")
     .select("*")
@@ -158,9 +187,10 @@ export async function getActivitiesByType(type: string) {
   return (data as Activity[]).map(withImageUrl);
 }
 
-// 🔧 DIAGNOSTIC TOOL: List all files in your bucket to see actual structure
 export async function debugBucketStructure() {
   console.log("\n🔍 === BUCKET STRUCTURE DEBUG ===");
+
+  const supabase = getSupabase();
 
   try {
     // List root level
@@ -171,8 +201,8 @@ export async function debugBucketStructure() {
 
     if (rootError) {
       console.error("❌ Error listing root:", rootError);
-    } else {
-      rootFiles?.forEach((file) => {
+    } else if (rootFiles) {
+      rootFiles.forEach((file) => {
         console.log(`  ${file.name}${file.id ? "" : " (folder)"}`);
       });
     }
@@ -185,12 +215,14 @@ export async function debugBucketStructure() {
 
     if (photosError) {
       console.error("❌ Error listing photos/:", photosError);
-    } else {
-      photosFiles?.forEach((file) => {
+    } else if (photosFiles) {
+      photosFiles.forEach((file) => {
         const fullPath = `photos/${file.name}`;
-        const url = supabase.storage.from(IMAGES_BUCKET).getPublicUrl(fullPath);
+        const { data: urlData } = supabase.storage
+          .from(IMAGES_BUCKET)
+          .getPublicUrl(fullPath);
         console.log(`  ${file.name}`);
-        console.log(`    → ${url.data.publicUrl}`);
+        console.log(`    → ${urlData.publicUrl}`);
       });
     }
 
