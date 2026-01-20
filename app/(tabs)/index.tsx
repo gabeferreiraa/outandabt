@@ -2,7 +2,7 @@ import CategoryFilterBar from "@/components/filters/CategoryFilterBar";
 import FeedActivityCard from "@/components/ui/FeedActivityCard";
 import SearchBar from "@/components/ui/SearchBar";
 import { useActivitySheet } from "@/hooks/useActivitySheet";
-import { Activity, getActivities } from "@/lib/supabase";
+import { Activity, getActivities } from "@/lib/supabase"; // ✅ Import getActivities instead of supabase
 import BottomSheet from "@gorhom/bottom-sheet";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -32,21 +32,33 @@ export default function Feed() {
   const handleActivityPress = useCallback(
     (activity: Activity) => {
       if (!activity) return;
-      open(activity); // ✅ this opens the global sheet that overlays the tab bar
+      open(activity);
     },
     [open]
   );
+
   useEffect(() => {
     let mounted = true;
 
     const load = async () => {
       setLoading(true);
 
-      const data = await getActivities();
+      try {
+        const data = await getActivities();
 
-      if (!mounted) return;
-      setActivities(data);
-      setLoading(false);
+        if (!mounted) return;
+
+        console.log("✅ Feed loaded", data.length, "activities");
+        setActivities(data);
+      } catch (error) {
+        console.error("❌ Feed load error:", error);
+        if (!mounted) return;
+        setActivities([]);
+      } finally {
+        if (mounted) {
+          setLoading(false);
+        }
+      }
     };
 
     load();
@@ -72,8 +84,8 @@ export default function Feed() {
     });
   }, [activities, searchQuery, selectedCategory]);
 
-  const popular = useMemo(() => filtered.slice(10, 35), [filtered]);
-  const hotSpots = useMemo(() => filtered.slice(10, 35), [filtered]);
+  const popular = useMemo(() => filtered.slice(0, 10), [filtered]);
+  const hotSpots = useMemo(() => filtered.slice(0, 10), [filtered]);
 
   const handleSearch = (query: string) => setSearchQuery(query);
 
@@ -87,9 +99,8 @@ export default function Feed() {
   const openActivity = (activity: Activity) => {
     setSelectedActivity(activity);
 
-    // wait a tick so sheet mounts with the activity
     requestAnimationFrame(() => {
-      sheetRef.current?.snapToIndex(0); // or snapToIndex(0)
+      sheetRef.current?.snapToIndex(0);
     });
   };
 

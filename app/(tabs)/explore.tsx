@@ -4,7 +4,7 @@ import SearchBar from "@/components/ui/SearchBar";
 import { getCategoryColor } from "@/constants/categoryColors";
 import { useActivitySheet } from "@/hooks/useActivitySheet";
 import { useFilteredActivities } from "@/hooks/useFilteredActivities";
-import { Activity, debugBucketStructure, getActivities } from "@/lib/supabase";
+import { Activity, getActivities } from "@/lib/supabase";
 import { Ionicons } from "@expo/vector-icons";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -79,7 +79,6 @@ export default function ExploreScreen() {
     loadActivities();
   }, []);
 
-  // Fit all markers when mappable activities are first loaded (not filtered)
   useEffect(() => {
     if (mappableActivities.length > 0 && !selectedCategory && !searchQuery) {
       const timer = setTimeout(() => {
@@ -92,12 +91,11 @@ export default function ExploreScreen() {
   const loadActivities = async () => {
     setLoading(true);
     try {
-      await debugBucketStructure();
       const data = await getActivities();
-
+      console.log("✅ Explore loaded", data.length, "activities");
       setActivities(data);
     } catch (error) {
-      console.error("Error loading activities:", error);
+      console.error("❌ Explore load error:", error);
       setActivities([]);
     } finally {
       setLoading(false);
