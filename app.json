@@ -8,7 +8,6 @@
     "scheme": "outandabt",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
-    "jsEngine": "jsc",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.outnabt",
@@ -33,6 +32,7 @@
       "output": "static",
       "favicon": "./assets/images/outnabt-logo.png"
     },
+
     "plugins": [
       "expo-router",
       [

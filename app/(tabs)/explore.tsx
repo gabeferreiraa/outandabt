@@ -28,6 +28,70 @@ const INITIAL_COORDS: Region = {
   longitudeDelta: 0.0421,
 };
 
+// Helper function to determine empty state message
+const getEmptyStateMessage = (
+  loading: boolean,
+  activities: Activity[],
+  filteredActivities: Activity[],
+  selectedCategory: string | null,
+  searchQuery: string,
+  loadError: string | null
+): { title: string; reason: string } => {
+  // Still loading
+  if (loading) {
+    return {
+      title: "Loading activities...",
+      reason: "Please wait while we fetch the latest activities"
+    };
+  }
+
+  // Database or network error
+  if (loadError) {
+    return {
+      title: "Unable to load activities",
+      reason: loadError
+    };
+  }
+
+  // No activities loaded at all
+  if (activities.length === 0) {
+    return {
+      title: "No activities available",
+      reason: "There are currently no activities in the database"
+    };
+  }
+
+  // Have activities but filters returned nothing
+  if (filteredActivities.length === 0) {
+    const reasons: string[] = [];
+    
+    if (selectedCategory) {
+      reasons.push(`category "${selectedCategory}"`);
+    }
+    
+    if (searchQuery.trim()) {
+      reasons.push(`search "${searchQuery}"`);
+    }
+
+    if (reasons.length > 0) {
+      return {
+        title: "No activities found",
+        reason: `No matches for ${reasons.join(" and ")}`
+      };
+    }
+
+    return {
+      title: "No activities found",
+      reason: "Try adjusting your filters or search criteria"
+    };
+  }
+
+  return {
+    title: "No activities found",
+    reason: "Unknown filter state"
+  };
+};
+
 export default function ExploreScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"map" | "list">("map");
@@ -35,6 +99,7 @@ export default function ExploreScreen() {
   const [activities, setActivities] = useState<Activity[]>([]);
   const [loading, setLoading] = useState(true);
   const [isUpdatingMarkers, setIsUpdatingMarkers] = useState(false);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const mapRef = useRef<MapView>(null);
 
@@ -90,6 +155,7 @@ export default function ExploreScreen() {
 
   const loadActivities = async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const data = await getActivities();
       console.log("✅ Explore loaded", data.length, "activities");
@@ -97,6 +163,13 @@ export default function ExploreScreen() {
     } catch (error) {
       console.error("❌ Explore load error:", error);
       setActivities([]);
+      
+      // Set user-friendly error message
+      if (error instanceof Error) {
+        setLoadError(`Database error: ${error.message}`);
+      } else {
+        setLoadError("Failed to connect to database. Please check your connection and try again.");
+      }
     } finally {
       setLoading(false);
     }
@@ -171,6 +244,16 @@ export default function ExploreScreen() {
     handleActivityPress,
     getMarkerColor,
   ]);
+
+  // Get empty state message
+  const emptyState = getEmptyStateMessage(
+    loading,
+    activities,
+    filteredActivities,
+    selectedCategory,
+    searchQuery,
+    loadError
+  );
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -270,9 +353,8 @@ export default function ExploreScreen() {
               )}
               ListEmptyComponent={
                 <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>
-                    No activities found matching your criteria
-                  </Text>
+                  <Text style={styles.emptyText}>{emptyState.title}</Text>
+                  <Text style={styles.emptyReason}>{emptyState.reason}</Text>
                 </View>
               }
               contentContainerStyle={
@@ -345,4 +427,11 @@ const styles = StyleSheet.create({
   emptyContainer: { padding: 32, alignItems: "center" },
   emptyListContainer: { flexGrow: 1, justifyContent: "center" },
   emptyText: { fontSize: 16, color: "#999" },
+  emptyReason: { 
+    fontSize: 14, 
+    color: "#666", 
+    marginTop: 8,
+    textAlign: "center",
+    paddingHorizontal: 16
+  },
 });
