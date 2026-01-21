@@ -26,8 +26,8 @@ let supabaseInstance: ReturnType<typeof createClient> | null = null;
 
 function getSupabase() {
   if (!supabaseInstance) {
-    const url = process.env.EXPO_PUBLIC_SUPABASE_URL;
-    const key = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY;
+    const url = "https://pyhdjiauxsjmfitlgipw.supabase.co"
+    const key = "sb_publishable_IFObzo9Pjn9sxbQ0mRhdcQ_MpPdWTho"
 
     if (!url || !key) {
       console.error(
