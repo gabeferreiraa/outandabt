@@ -58,7 +58,6 @@ const styles = StyleSheet.create({
   },
   header: {
     backgroundColor: "#FEFDF8",
-    // No bottom padding here — we control spacing inside headerContent
   },
   brand: { marginTop: 6, fontSize: 24, fontWeight: "800", color: "#1F1F1F" },
   headerContent: {

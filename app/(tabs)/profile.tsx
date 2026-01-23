@@ -12,7 +12,7 @@ import {
 
 // ✅ Swap these to your existing palette exports (keep the names if you already have them)
 const COLORS = {
-  bg: "#F3F1EC", // app background (warm off-white)
+  bg: "#FEFDF8", // app background (warm off-white)
   card: "#FBFAF6", // card surface
   text: "#1B1B1B",
   muted: "#8E8A80",

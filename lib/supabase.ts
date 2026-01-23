@@ -35,8 +35,6 @@ function getSupabase() {
           `URL: ${url ?? "missing"}\n` +
           `Key: ${key ? "present (hidden)" : "missing"}`
       );
-      // Instead of throwing → return a dummy client or null
-      // This prevents app crash on launch. You can handle this in your UI instead.
       supabaseInstance = createClient(
         "https://dummy.supabase.co",
         "dummy-key",
